@@ -345,7 +345,7 @@
 
                     const ws = XLSX.utils.json_to_sheet(data);
                     const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Mutabaah Harian");
+                    XLSX.utils.book_append_sheet(wb, ws, "Habits Tracker Harian");
                     
                     const fileName = `HabitsTracker_${user.name.replace(/\s+/g, '_')}_${todayDate}.xlsx`;
                     XLSX.writeFile(wb, fileName);
@@ -371,7 +371,7 @@
                     { id: 'combo2_40', icon: '🛡️', title: 'Double Master (40)', desc: '2 kebiasaan 40 hari streak', unlocked: habitsWith40Streak >= 2 },
                     { id: 'combo3_21', icon: '🥇', title: 'Triple Threat (21)', desc: '3 kebiasaan 21 hari streak', unlocked: habitsWith21Streak >= 3 },
                     { id: 'combo3_40', icon: '💎', title: 'Habit Legend (40)', desc: '3 kebiasaan 40 hari streak', unlocked: habitsWith40Streak >= 3 },
-                    { id: 'perfect_day', icon: '🏆', title: 'Hari Sempurna', desc: '100% mutabaah selesai dalam sehari', unlocked: history[todayDate]?.status === 'perfect' }
+                    { id: 'perfect_day', icon: '🏆', title: 'Hari Sempurna', desc: '100% Habits Tracker selesai dalam sehari', unlocked: history[todayDate]?.status === 'perfect' }
                 ];
             }, [user.level, habits, history, todayDate]);
 
@@ -409,7 +409,7 @@
                                 <div className="space-y-6 animate-slide-up">
                                     <div className={`p-6 rounded-3xl border flex items-center justify-between shadow-sm mx-2 ${user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                                         <div>
-                                            <h3 className="text-xl font-bold">Progress Mutabaah</h3>
+                                            <h3 className="text-xl font-bold">Progress Habits Tracker</h3>
                                             <div className="flex items-baseline gap-1 mt-2">
                                                 <span className={`text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r ${THEMES[user.theme]}`}>
                                                     {Math.round(history[todayDate]?.percentage || 0)}%
@@ -492,7 +492,7 @@
 
                                     <div className={`p-5 rounded-3xl border shadow-sm mx-2 ${user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                                         <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
-                                            <i data-lucide="book-open" className="w-4 h-4 text-indigo-500"></i> Jurnal / Catatan Mutabaah
+                                            <i data-lucide="book-open" className="w-4 h-4 text-indigo-500"></i> Jurnal / Catatan Habits Tracker
                                         </h3>
                                         <textarea 
                                             value={currentNote}
@@ -512,7 +512,7 @@
                                         </div>
                                         <h2 className="text-2xl font-bold mb-2 text-indigo-600 dark:text-indigo-400">Coach AI ✨</h2>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 px-4 leading-relaxed">
-                                            Evaluasi Mutabaah 7 hari terakhir untuk insight spiritual.
+                                            Evaluasi Habits Tracker 7 hari terakhir untuk insight spiritual.
                                         </p>
                                         <button onClick={handleAiLab} disabled={aiLoading} className={`px-8 py-3.5 rounded-2xl text-sm text-white font-bold bg-gradient-to-r ${THEMES[user.theme]} flex items-center gap-3 mx-auto shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5`}>
                                             {aiLoading ? "Memproses..." : <span className="flex items-center gap-2">Minta Nasehat <i data-lucide="wand-2" className="w-4 h-4"></i></span>}
@@ -603,10 +603,10 @@
                                     {/* SECTION EXPORT EXCEL DI TAB PROFIL */}
                                     <div className={`p-8 rounded-3xl border shadow-sm ${user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                                         <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
-                                            <i data-lucide="file-spreadsheet" className="w-5 h-5 text-emerald-500"></i> Ekspor Data Mutabaah
+                                            <i data-lucide="file-spreadsheet" className="w-5 h-5 text-emerald-500"></i> Ekspor Data Habits Tracker
                                         </h3>
                                         <p className={`text-xs mb-5 leading-relaxed ${user.darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                                            Unduh hasil isian Mutabaah hari ini dalam format Excel (.xlsx) untuk dilaporkan atau rekapitulasi pribadi.
+                                            Unduh hasil isian Habits Tracker hari ini dalam format Excel (.xlsx) untuk dilaporkan atau rekapitulasi pribadi.
                                         </p>
                                         <button onClick={exportToExcel} className="w-full py-3.5 rounded-2xl text-white font-bold bg-emerald-500 hover:bg-emerald-600 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
                                             Unduh Laporan Excel
