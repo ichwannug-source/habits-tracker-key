@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Habits Tracker KEY</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
+        .animate-zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Konfigurasi --- //
+        const part1 = "AIzaSyCvY667tOPwTQs6"; 
+        const part2 = "NnmVXrKdiqkU7Zds3qM"; 
+        const apiKey = part1 + part2; 
+
+        const THEMES = {
+            modern: 'from-indigo-600 to-purple-600',
+            emerald: 'from-emerald-500 to-teal-600',
+            sunset: 'from-orange-500 to-rose-500',
+            midnight: 'from-slate-800 to-slate-900'
+        };
+
+        const AVATARS = ['✨', '🧘', '🔥', '🍀', '🌊', '⚡', '🚀', '🧠', '🌱', '⭐', '🏆', '🦁'];
+        
+        // --- Kategori & Warna ---
+        const CAT_STYLES = {
+            'PRAY': { bg: 'bg-blue-100 dark:bg-blue-900/40', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-300', icon: 'moon-star' },
+            'AKHLAK': { bg: 'bg-emerald-100 dark:bg-emerald-900/40', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-300', icon: 'heart' },
+            'STUDYING': { bg: 'bg-amber-100 dark:bg-amber-900/40', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-300', icon: 'book-open' },
+            'SHARING': { bg: 'bg-rose-100 dark:bg-rose-900/40', border: 'border-rose-200 dark:border-rose-800', text: 'text-rose-700 dark:text-rose-300', icon: 'share-2' },
+        };
+
+        const DEFAULT_HABITS = [
+            // PRAY
+            { id: 101, name: 'Subuh', category: 'PRAY', type: 'fardhu', checks: [false, false, false, false, false], streak: 0, completed: false },
+            { id: 102, name: 'Dzuhur', category: 'PRAY', type: 'fardhu', checks: [false, false, false, false, false], streak: 0, completed: false },
+            { id: 103, name: 'Ashar', category: 'PRAY', type: 'fardhu', checks: [false, false, false, false, false], streak: 0, completed: false },
+            { id: 104, name: 'Maghrib', category: 'PRAY', type: 'fardhu', checks: [false, false, false, false, false], streak: 0, completed: false },
+            { id: 105, name: 'Isya', category: 'PRAY', type: 'fardhu', checks: [false, false, false, false, false], streak: 0, completed: false },
+            { id: 106, name: 'Dhuha', category: 'PRAY', type: 'boolean', streak: 0, completed: false },
+            { id: 107, name: 'Tahajjud/Qiyamulail', category: 'PRAY', type: 'boolean', streak: 0, completed: false },
+            { id: 108, name: 'Shaum Sunnah', category: 'PRAY', type: 'boolean', streak: 0, completed: false },
+            { id: 109, name: 'Sedekah harian', category: 'PRAY', type: 'boolean', streak: 0, completed: false },
+            // AKHLAK
+            { id: 201, name: 'Tepat Waktu', category: 'AKHLAK', type: 'boolean', streak: 0, completed: false },
+            { id: 202, name: 'Tidak Berghibah', category: 'AKHLAK', type: 'boolean', streak: 0, completed: false },
+            { id: 203, name: 'Membantu Orangtua/Keluarga', category: 'AKHLAK', type: 'boolean', streak: 0, completed: false },
+            // STUDYING
+            { id: 301, name: 'Membaca Al-Qur\'an (Min 2 Lembar)', category: 'STUDYING', type: 'boolean', streak: 0, completed: false },
+            { id: 302, name: 'Baca buku Islami/Positif', category: 'STUDYING', type: 'boolean', streak: 0, completed: false },
+            { id: 303, name: 'Menyimak kajian (5 menit)', category: 'STUDYING', type: 'boolean', streak: 0, completed: false },
+            // SHARING
+            { id: 401, name: 'Membagikan konten dakwah sosmed', category: 'SHARING', type: 'boolean', streak: 0, completed: false },
+            { id: 402, name: 'Membicarakan Islam dgn teman', category: 'SHARING', type: 'boolean', streak: 0, completed: false },
+            { id: 403, name: 'Membantu orang lain yg butuh', category: 'SHARING', type: 'boolean', streak: 0, completed: false },
+        ];
+
+        // --- Utility: Fungsi AI ---
+        const fetchGeminiWithRetry = async (prompt, systemInstruction, retries = 3) => {
+            const delays = [1000, 2000, 4000];
+            const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(GEMINI_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: systemInstruction }] }
+                        })
+                    });
+                    const result = await response.json(); 
+                    if (!response.ok) throw new Error(result.error?.message || `HTTP error!`);
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada respon.";
+                } catch (error) {
+                    if (i === retries - 1) return `Error AI: ${error.message}`;
+                    await new Promise(res => setTimeout(res, delays[i]));
+                }
+            }
+        };        
+
+        const GrowthTree = ({ percentage, darkMode }) => {
+            return (
+                <div className="flex flex-col items-center justify-center p-4">
+                    <svg width="120" height="120" viewBox="0 0 100 100" className="drop-shadow-md transition-all duration-700 ease-in-out">
+                        <ellipse cx="50" cy="90" rx="40" ry="8" fill={darkMode ? "#334155" : "#E2E8F0"} />
+                        {percentage >= 0 && (
+                            <g className="animate-zoom-in">
+                                <path d="M50 90 Q50 80 55 75" stroke="#4ADE80" strokeWidth="3" fill="none" />
+                                <path d="M55 75 Q60 70 58 65 Q53 68 55 75" fill="#4ADE80" />
+                            </g>
+                        )}
+                        {percentage >= 25 && (
+                            <g className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                                <path d="M50 90 L50 60" stroke="#78350F" strokeWidth="4" />
+                                <path d="M50 75 L40 65" stroke="#78350F" strokeWidth="2" />
+                                <path d="M50 70 L60 62" stroke="#78350F" strokeWidth="2" />
+                            </g>
+                        )}
+                        {percentage >= 50 && (
+                            <g className="animate-zoom-in" style={{ animationDelay: '0.2s' }}>
+                                <circle cx="50" cy="50" r="18" fill="#22C55E" opacity="0.9" />
+                                <circle cx="40" cy="60" r="12" fill="#16A34A" opacity="0.9" />
+                                <circle cx="60" cy="60" r="12" fill="#16A34A" opacity="0.9" />
+                                <circle cx="50" cy="40" r="12" fill="#4ADE80" opacity="0.9" />
+                            </g>
+                        )}
+                        {percentage >= 75 && (
+                            <g className="animate-zoom-in" style={{ animationDelay: '0.3s' }}>
+                                <circle cx="42" cy="48" r="3" fill="#EF4444" />
+                                <circle cx="58" cy="45" r="3" fill="#EF4444" />
+                                <circle cx="50" cy="60" r="3" fill="#EF4444" />
+                                <circle cx="65" cy="55" r="3" fill="#EF4444" />
+                                <circle cx="35" cy="55" r="3" fill="#EF4444" />
+                            </g>
+                        )}
+                    </svg>
+                    <p className={`text-[10px] font-bold mt-2 uppercase tracking-widest transition-colors ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {percentage < 25 ? "Fase Bibit" : percentage < 50 ? "Tumbuh Ranting" : percentage < 75 ? "Pohon Rindang" : "Siap Panen Makna"}
+                    </p>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('tracker');
+            const [user, setUser] = useState(() => {
+                const saved = localStorage.getItem('habitflow_user_v8');
+                return saved ? JSON.parse(saved) : {
+                    name: 'Input Nama',
+                    avatar: '✨',
+                    theme: 'modern',
+                    points: 0,
+                    level: 1,
+                    darkMode: false,
+                    aiTitle: 'Newbie'
+                };
+            });
+
+            const [habits, setHabits] = useState(() => {
+                const saved = localStorage.getItem('habitflow_habits_v8');
+                return saved ? JSON.parse(saved) : DEFAULT_HABITS;
+            });
+
+            const [history, setHistory] = useState(() => {
+                const saved = localStorage.getItem('habitflow_history_v8');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            const [currentNote, setCurrentNote] = useState('');
+            const [aiLoading, setAiLoading] = useState(false);
+            const [aiLabContent, setAiLabContent] = useState(null);
+            
+            // Modal States
+            const [habitToDelete, setHabitToDelete] = useState(null);
+            const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+            const [newHabitName, setNewHabitName] = useState('');
+            const [newHabitCategory, setNewHabitCategory] = useState('PRAY');
+
+            useEffect(() => { lucide.createIcons(); });
+
+            const todayDate = useMemo(() => {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }, []);
+
+            // Reset Harian
+            useEffect(() => {
+                const lastLoginDate = localStorage.getItem('habitflow_lastDate_v8');
+                if (lastLoginDate && lastLoginDate !== todayDate) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+                    setHabits(prevHabits => prevHabits.map(h => {
+                        let newStreak = h.streak;
+                        if (lastLoginDate !== yesterdayStr || !h.completed) newStreak = 0;
+                        const resetChecks = h.type === 'fardhu' ? [false, false, false, false, false] : null;
+                        return { ...h, completed: false, streak: newStreak, ...(resetChecks && { checks: resetChecks }) };
+                    }));
+                }
+                localStorage.setItem('habitflow_lastDate_v8', todayDate);
+            }, [todayDate]); 
+
+            useEffect(() => {
+                localStorage.setItem('habitflow_user_v8', JSON.stringify(user));
+                localStorage.setItem('habitflow_habits_v8', JSON.stringify(habits));
+                localStorage.setItem('habitflow_history_v8', JSON.stringify(history));
+            }, [user, habits, history]);
+
+            useEffect(() => {
+                const total = habits.length;
+                const completedCount = habits.filter(h => h.completed).length;
+                let status = 'none';
+                let percentage = 0;
+                
+                if (total > 0) {
+                    percentage = (completedCount / total) * 100;
+                    status = percentage === 100 ? 'perfect' : percentage > 0 ? 'partial' : 'none';
+                }
+
+                setHistory(prev => {
+                    const todayData = prev[todayDate] || {};
+                    if (todayData.status === status && todayData.percentage === percentage) return prev;
+                    return { ...prev, [todayDate]: { ...todayData, status, percentage } };
+                });
+            }, [habits, todayDate]);
+
+            useEffect(() => {
+                if (history[todayDate]?.note) setCurrentNote(history[todayDate].note);
+            }, [todayDate]);
+
+            const saveNote = (text) => {
+                setCurrentNote(text);
+                setHistory(prev => ({ ...prev, [todayDate]: { ...prev[todayDate], note: text } }));
+            };
+
+            const toggleHabit = (id) => {
+                setHabits(habits.map(h => {
+                    if (h.id === id && h.type !== 'fardhu') {
+                        const isDone = !h.completed;
+                        updatePoints(isDone ? 15 : -15);
+                        return { ...h, completed: isDone, streak: isDone ? h.streak + 1 : Math.max(0, h.streak - 1) };
+                    }
+                    return h;
+                }));
+            };
+
+            const toggleFardhuCheck = (habitId, checkIndex) => {
+                setHabits(habits.map(h => {
+                    if (h.id === habitId && h.type === 'fardhu') {
+                        const newChecks = [...h.checks];
+                        const wasChecked = newChecks[checkIndex];
+                        newChecks[checkIndex] = !wasChecked;
+                        
+                        // Fardhu dihitung 'completed' untuk streak harian jika minimal Sholat (index 0) dilakukan
+                        const isDone = newChecks[0]; 
+                        
+                        updatePoints(!wasChecked ? 3 : -3); // 3 poin untuk setiap sunnah/kriteria sholat
+                        
+                        return { ...h, checks: newChecks, completed: isDone, streak: isDone && !h.completed ? h.streak + 1 : h.streak };
+                    }
+                    return h;
+                }));
+            };
+
+            const updatePoints = (change) => {
+                setUser(prev => {
+                    const newPts = Math.max(0, prev.points + change);
+                    const newLevel = Math.floor(newPts / 100) + 1;
+                    const titles = ['Newbie', 'Explorer', 'Seeker', 'Achiever', 'Master', 'Legend'];
+                    const newTitle = titles[Math.min(titles.length - 1, Math.floor(newLevel / 2))] || 'Legend';
+                    return { ...prev, points: newPts, level: newLevel, aiTitle: newTitle };
+                });
+            };
+
+            const openAddModal = (category) => {
+                setNewHabitCategory(category);
+                setNewHabitName('');
+                setIsAddModalOpen(true);
+            };
+
+            const addNewHabit = () => {
+                if (newHabitName.trim()) {
+                    setHabits([...habits, { 
+                        id: Date.now(), 
+                        name: newHabitName, 
+                        category: newHabitCategory, 
+                        type: 'boolean', 
+                        streak: 0, 
+                        completed: false 
+                    }]);
+                    setIsAddModalOpen(false);
+                }
+            };
+
+            const confirmDelete = () => {
+                if(habitToDelete) {
+                    setHabits(habits.filter(x => x.id !== habitToDelete));
+                    setHabitToDelete(null);
+                }
+            };
+
+            const handleAiLab = async () => {
+                setAiLoading(true);
+                const last7Days = Object.entries(history).sort((a, b) => new Date(a[0]) - new Date(b[0])).slice(-7);
+                const daysText = last7Days.map(([date, data]) => `- ${date}: ${Math.round(data.percentage || 0)}% Selesai`).join('\n');
+                const notesText = last7Days.map(([_, data]) => data.note).filter(Boolean).join('; ');
+                
+                const prompt = `Riwayat 7 hari terakhir:\n${daysText}\n\nCatatan:\n${notesText || "Tidak ada."}\n\nSebagai coach spiritual & produktivitas Islam, berikan 1 insight dan 1 nasehat aksi (maks 60 kata).`;
+                const content = await fetchGeminiWithRetry(prompt, "Gunakan bahasa Indonesia yang menyejukkan, padat, dan suportif.");
+                setAiLabContent(content);
+                setAiLoading(false);
+            };
+
+            const calendarDays = useMemo(() => {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth();
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; 
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const days = [];
+                for (let i = 0; i < adjustedFirstDay; i++) days.push(null);
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    days.push({ day: d, dateStr, data: history[dateStr] });
+                }
+                return days;
+            }, [history]);
+
+            return (
+                <div className={`min-h-screen transition-colors duration-500 pb-24 ${user.darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'} font-sans relative`}>
+                    <div className="h-1.5 w-full fixed top-0 z-50 bg-slate-200 dark:bg-slate-800">
+                        <div className={`h-full bg-gradient-to-r ${THEMES[user.theme]} transition-all duration-700`} style={{ width: `${(user.points % 100)}%` }}></div>
+                    </div>
+                    
+                    <div className="max-w-xl mx-auto px-4 pt-8">
+                        <header className="flex justify-between items-center mb-6 px-2">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${THEMES[user.theme]} flex items-center justify-center text-2xl shadow-lg`}>
+                                    {user.avatar}
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold leading-none">{user.name}</h2>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${user.darkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
+                                            LVL {user.level}
+                                        </span>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r ${THEMES[user.theme]}`}>
+                                            {user.aiTitle}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={() => setActiveTab('profile')} className={`p-3 rounded-2xl border transition-colors ${user.darkMode ? 'border-slate-800 bg-slate-800 hover:bg-slate-700' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+                                <i data-lucide="settings" className="w-5 h-5 text-slate-400"></i>
+                            </button>
+                        </header>
+
+                        <main>
+                            {activeTab === 'tracker' && (
+                                <div className="space-y-6 animate-slide-up">
+                                    <div className={`p-6 rounded-3xl border flex items-center justify-between shadow-sm mx-2 ${user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                        <div>
+                                            <h3 className="text-xl font-bold">Progress Mutabaah</h3>
+                                            <div className="flex items-baseline gap-1 mt-2">
+                                                <span className={`text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r ${THEMES[user.theme]}`}>
+                                                    {Math.round(history[todayDate]?.percentage || 0)}%
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-400 font-medium mt-1">Hari Ini</p>
+                                        </div>
+                                        <GrowthTree percentage={history[todayDate]?.percentage || 0} darkMode={user.darkMode} />
+                                    </div>
+
+                                    {/* KATEGORI HABITS */}
+                                    <div className="space-y-6">
+                                        {Object.keys(CAT_STYLES).map(categoryName => {
+                                            const catHabits = habits.filter(h => h.category === categoryName);
+                                            if (catHabits.length === 0) return null;
+                                            const style = CAT_STYLES[categoryName];
+                                            
+                                            return (
+                                                <div key={categoryName} className="space-y-3">
+                                                    <div className="flex items-center justify-between px-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={`p-1.5 rounded-lg ${style.bg} ${style.text}`}>
+                                                                <i data-lucide={style.icon} className="w-4 h-4"></i>
+                                                            </div>
+                                                            <h3 className={`font-bold tracking-wide ${user.darkMode ? 'text-slate-200' : 'text-slate-700'}`}>{categoryName}</h3>
+                                                        </div>
+                                                        <button onClick={() => openAddModal(categoryName)} className={`p-1.5 rounded-full border border-dashed transition-colors ${style.text} ${style.border} hover:${style.bg}`}>
+                                                            <i data-lucide="plus" className="w-4 h-4"></i>
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-2">
+                                                        {catHabits.map(h => (
+                                                            <div key={h.id} className={`p-4 rounded-3xl border transition-all duration-300 ${h.completed ? (user.darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-50 border-slate-200') : (user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 hover:border-slate-300')}`}>
+                                                                <div className="flex items-start justify-between gap-3">
+                                                                    
+                                                                    {h.type === 'boolean' ? (
+                                                                        <button onClick={() => toggleHabit(h.id)} className={`mt-0.5 flex-shrink-0 transition-colors ${h.completed ? 'text-emerald-500' : 'text-slate-300 dark:text-slate-600'}`}>
+                                                                            <i data-lucide={h.completed ? "check-circle-2" : "circle"} className="w-6 h-6"></i>
+                                                                        </button>
+                                                                    ) : (
+                                                                        <div className="mt-1 flex-shrink-0">
+                                                                             <i data-lucide="clock-4" className={`w-5 h-5 ${h.completed ? 'text-indigo-500' : 'text-slate-300 dark:text-slate-600'}`}></i>
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="flex-1 cursor-pointer select-none">
+                                                                        <p className={`font-bold text-sm transition-all ${h.completed ? 'text-slate-400 dark:text-slate-500' : ''}`}>{h.name}</p>
+                                                                        
+                                                                        {h.type === 'fardhu' && (
+                                                                            <div className="flex flex-wrap gap-1.5 mt-3 mb-1">
+                                                                                {['Sholat', 'Di Masjid', 'Jamaah', 'Awal Wkt', 'Rawatib'].map((lbl, idx) => (
+                                                                                    <button 
+                                                                                        key={idx} 
+                                                                                        onClick={() => toggleFardhuCheck(h.id, idx)}
+                                                                                        className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase transition-colors border ${h.checks[idx] ? 'bg-indigo-100 border-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300' : 'bg-slate-50 border-slate-200 text-slate-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500'}`}
+                                                                                    >
+                                                                                        {h.checks[idx] ? '✅' : '⬜'} {lbl}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+
+                                                                        <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase mt-1.5 ${h.streak > 0 ? 'text-orange-500' : 'text-slate-400'}`}>
+                                                                            <i data-lucide="flame" className="w-3.5 h-3.5"></i> {h.streak} Hari
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <button onClick={() => setHabitToDelete(h.id)} className="text-slate-300 hover:text-red-500 dark:text-slate-600 dark:hover:text-red-400 p-1 flex-shrink-0">
+                                                                        <i data-lucide="trash-2" className="w-4 h-4"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className={`p-5 rounded-3xl border shadow-sm mx-2 ${user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                        <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
+                                            <i data-lucide="book-open" className="w-4 h-4 text-indigo-500"></i> Jurnal / Catatan Mutabaah
+                                        </h3>
+                                        <textarea 
+                                            value={currentNote}
+                                            onChange={(e) => saveNote(e.target.value)}
+                                            placeholder="Tulis refleksi harian atau kendala hari ini..."
+                                            className={`w-full p-3 rounded-2xl text-sm min-h-[80px] resize-none outline-none transition-colors ${user.darkMode ? 'bg-slate-900 text-slate-200 border border-slate-700 focus:border-indigo-500' : 'bg-slate-50 border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'}`}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'motivation' && (
+                                <div className="space-y-6 animate-slide-up px-2">
+                                    <div className={`p-8 rounded-3xl border text-center shadow-sm ${user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                        <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-inner">
+                                            <i data-lucide="brain-circuit" className="w-10 h-10 text-indigo-500"></i>
+                                        </div>
+                                        <h2 className="text-2xl font-bold mb-2 text-indigo-600 dark:text-indigo-400">Coach AI ✨</h2>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-8 px-4 leading-relaxed">
+                                            Evaluasi Mutabaah 7 hari terakhir untuk insight spiritual.
+                                        </p>
+                                        <button onClick={handleAiLab} disabled={aiLoading} className={`px-8 py-3.5 rounded-2xl text-sm text-white font-bold bg-gradient-to-r ${THEMES[user.theme]} flex items-center gap-3 mx-auto shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5`}>
+                                            {aiLoading ? "Memproses..." : <span className="flex items-center gap-2">Minta Nasehat <i data-lucide="wand-2" className="w-4 h-4"></i></span>}
+                                        </button>
+                                        
+                                        {aiLabContent && (
+                                            <div className={`mt-10 p-6 rounded-3xl border text-left animate-slide-up shadow-sm relative overflow-hidden ${user.darkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-500 to-purple-500"></div>
+                                                <i data-lucide="quote" className="w-8 h-8 text-indigo-200 dark:text-indigo-900 mb-4"></i>
+                                                <p className="text-sm leading-relaxed font-medium text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{aiLabContent}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'profile' && (
+                                <div className="space-y-6 animate-slide-up px-2">
+                                    <div className={`p-8 rounded-3xl border shadow-sm ${user.darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                        <div className="flex flex-col items-center mb-8">
+                                            <div className={`w-24 h-24 bg-gradient-to-br ${THEMES[user.theme]} rounded-[2rem] flex items-center justify-center text-5xl mb-5 shadow-lg transform hover:scale-105 transition-transform`}>
+                                                {user.avatar}
+                                            </div>
+                                            <input value={user.name} onChange={e => setUser({...user, name: e.target.value})} className={`text-center font-bold text-2xl bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-indigo-500 outline-none w-3/4 pb-1 transition-colors ${user.darkMode ? 'text-white' : 'text-slate-900'}`} />
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-3">Level {user.level} • {user.points} XP</p>
+                                        </div>
+                                        
+                                        <button onClick={() => setUser({...user, darkMode: !user.darkMode})} className={`w-full py-4 rounded-2xl flex items-center justify-between px-6 transition-colors shadow-sm ${user.darkMode ? 'bg-slate-900 border border-slate-700 text-white' : 'bg-slate-100 text-slate-800'}`}>
+                                            <span className="text-sm font-bold flex items-center gap-3">
+                                                <i data-lucide={user.darkMode ? "moon" : "sun"} className={`w-5 h-5 ${user.darkMode ? 'text-indigo-400' : 'text-orange-500'}`}></i>
+                                                {user.darkMode ? "Mode Gelap Aktif" : "Mode Terang Aktif"}
+                                            </span>
+                                            <div className={`w-12 h-6 rounded-full p-1 transition-colors ${user.darkMode ? 'bg-indigo-500' : 'bg-slate-300'}`}>
+                                                <div className={`w-4 h-4 bg-white rounded-full transition-transform ${user.darkMode ? 'translate-x-6' : ''}`}></div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </main>
+                    </div>
+
+                    {/* MODAL TAMBAH HABIT */}
+                    {isAddModalOpen && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+                            <div className={`p-6 rounded-3xl w-full max-w-sm shadow-2xl animate-zoom-in ${user.darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+                                <div className="flex justify-between items-center mb-5">
+                                    <h3 className="font-bold text-lg">Tambah Habit: {newHabitCategory}</h3>
+                                    <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600"><i data-lucide="x" className="w-5 h-5"></i></button>
+                                </div>
+                                <input 
+                                    autoFocus
+                                    value={newHabitName} 
+                                    onChange={e => setNewHabitName(e.target.value)} 
+                                    placeholder="Tulis habit baru..." 
+                                    className={`w-full px-4 py-3.5 mb-4 rounded-2xl outline-none text-sm font-medium border ${user.darkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 border-slate-200'}`} 
+                                />
+                                <button onClick={addNewHabit} disabled={!newHabitName.trim()} className={`w-full py-3.5 rounded-2xl text-white font-bold bg-gradient-to-r ${THEMES[user.theme]} disabled:opacity-50`}>
+                                    Simpan Habit
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL KONFIRMASI HAPUS */}
+                    {habitToDelete && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+                            <div className={`p-6 rounded-3xl w-full max-w-xs shadow-2xl animate-zoom-in ${user.darkMode ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white text-slate-900'}`}>
+                                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center mb-4 mx-auto">
+                                    <i data-lucide="alert-triangle" className="w-6 h-6"></i>
+                                </div>
+                                <h3 className="text-center font-bold text-lg mb-2">Hapus Habit?</h3>
+                                <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-6">Data tidak dapat dikembalikan.</p>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setHabitToDelete(null)} className={`flex-1 py-3 rounded-2xl font-bold text-sm ${user.darkMode ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-700'}`}>Batal</button>
+                                    <button onClick={confirmDelete} className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm">Hapus</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <nav className={`fixed bottom-0 left-0 right-0 border-t px-6 py-4 z-40 backdrop-blur-xl ${user.darkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200'}`}>
+                        <div className="max-w-xl mx-auto flex justify-around items-center px-2">
+                            {[
+                                { id: 'tracker', label: 'Harian', icon: 'check-square' },
+                                { id: 'motivation', label: 'Coach AI', icon: 'brain-circuit' },
+                                { id: 'profile', label: 'Profil', icon: 'user' }
+                            ].map(tab => (
+                                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${activeTab === tab.id ? 'text-indigo-500 scale-110' : 'text-slate-400'}`}>
+                                    <i data-lucide={tab.icon} className={`w-6 h-6 ${activeTab === tab.id ? 'fill-indigo-50 stroke-indigo-500 dark:fill-indigo-900/30' : ''}`} style={{ strokeWidth: activeTab === tab.id ? 2.5 : 2 }}></i>
+                                    <span className={`text-[10px] uppercase tracking-wider ${activeTab === tab.id ? 'font-bold' : 'font-medium'}`}>{tab.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
