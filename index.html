@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HabitFlow - Mutabaah Harian</title>
+    <title>Habits Tracker KEY</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -347,7 +347,7 @@
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, ws, "Mutabaah Harian");
                     
-                    const fileName = `Mutabaah_${user.name.replace(/\s+/g, '_')}_${todayDate}.xlsx`;
+                    const fileName = `HabitsTracker_${user.name.replace(/\s+/g, '_')}_${todayDate}.xlsx`;
                     XLSX.writeFile(wb, fileName);
                 } catch (error) {
                     console.error("Gagal export Excel:", error);
